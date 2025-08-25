@@ -94,12 +94,19 @@ const Events = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">{event.description}</p>
-                <Button asChild className="w-full">
-                  <Link to={`/teams?event=${event.id}`}>
-                    <Users className="w-4 h-4 mr-2" />
-                    View Teams
-                  </Link>
-                </Button>
+                <div className="flex gap-2">
+                  <Button asChild size="sm" className="flex-1">
+                    <Link to={`/events/${event.id}`}>
+                      View Details
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="flex-1">
+                    <Link to={`/teams?event=${event.id}`}>
+                      <Users className="w-4 h-4 mr-2" />
+                      Teams
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

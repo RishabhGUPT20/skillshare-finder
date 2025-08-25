@@ -12,6 +12,9 @@ import NotFound from "./pages/NotFound";
 import CreateEventForm from "./components/CreateEventForm";
 import CreateTeamForm from "./components/CreateTeamForm";
 import CreateProfileForm from "./components/CreateProfileForm";
+import EventDetail from "./pages/EventDetail";
+import TeamDetail from "./pages/TeamDetail";
+import ProfileDetail from "./pages/ProfileDetail";
 
 const queryClient = new QueryClient();
 
@@ -25,10 +28,13 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/events/:id" element={<EventDetail />} />
           <Route path="/events/create" element={<CreateEventForm />} />
           <Route path="/teams" element={<Teams />} />
+          <Route path="/teams/:id" element={<TeamDetail />} />
           <Route path="/teams/create" element={<CreateTeamForm />} />
           <Route path="/profiles" element={<Profiles />} />
+          <Route path="/profiles/:id" element={<ProfileDetail />} />
           <Route path="/profiles/create" element={<CreateProfileForm />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

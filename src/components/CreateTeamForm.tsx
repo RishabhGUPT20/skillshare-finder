@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Users, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,16 @@ const CreateTeamForm = () => {
   const [skillInput, setSkillInput] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Pre-select event from URL params
+  useEffect(() => {
+    const eventParam = searchParams.get('event');
+    if (eventParam) {
+      setEventId(eventParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchEvents();
@@ -64,15 +73,39 @@ const CreateTeamForm = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      // Create the team
+      const { data: teamData, error: teamError } = await supabase
         .from('teams')
         .insert([{ 
           name, 
           event_id: eventId, 
           required_skills: skills 
-        }]);
+        }])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (teamError) throw teamError;
+
+      // Create a random profile as owner for demo
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
+
+      if (profilesError) throw profilesError;
+
+      if (profiles && profiles.length > 0) {
+        // Add creator as team owner
+        const { error: memberError } = await supabase
+          .from('team_members')
+          .insert([{
+            team_id: teamData.id,
+            user_id: profiles[0].id,
+            role: 'owner'
+          }]);
+
+        if (memberError) throw memberError;
+      }
 
       toast({
         title: "Success",
