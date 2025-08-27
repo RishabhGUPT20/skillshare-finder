@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Calendar, Users, User, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
 
 const Navigation = () => {
   const location = useLocation();
@@ -20,7 +21,7 @@ const Navigation = () => {
             HackHub
           </Link>
           
-          <div className="flex space-x-1">
+          <div className="flex items-center space-x-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.to;
@@ -41,6 +42,7 @@ const Navigation = () => {
                 </Link>
               );
             })}
+            <ThemeToggle />
           </div>
         </div>
       </div>
