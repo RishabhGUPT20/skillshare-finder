@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Users, Plus, Search } from "lucide-react";
+import { Users, Plus, Search, Filter, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,20 +22,32 @@ interface Team {
     role: string;
     profiles: {
       name: string;
+      college: string;
     };
   }[];
 }
 
+interface Event {
+  id: string;
+  name: string;
+}
+
 const Teams = () => {
   const [teams, setTeams] = useState<Team[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [eventFilter, setEventFilter] = useState("");
+  const [collegeFilter, setCollegeFilter] = useState("");
+  const [skillFilter, setSkillFilter] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get('event');
   const { toast } = useToast();
 
   useEffect(() => {
     fetchTeams();
+    fetchEvents();
   }, [eventId]);
 
   const fetchTeams = async () => {
@@ -45,7 +59,7 @@ const Teams = () => {
           events(name),
           team_members(
             role,
-            profiles(name)
+            profiles(name, college)
           )
         `)
         .order('created_at', { ascending: false });
@@ -69,12 +83,45 @@ const Teams = () => {
     }
   };
 
-  const filteredTeams = teams.filter(team =>
-    team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    team.required_skills.some(skill => 
-      skill.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+    }
+  };
+
+  const filteredTeams = teams.filter(team => {
+    const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      team.required_skills.some(skill => 
+        skill.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    
+    const matchesEvent = !eventFilter || team.event_id === eventFilter;
+    const matchesSkill = !skillFilter || team.required_skills.some(skill => 
+      skill.toLowerCase().includes(skillFilter.toLowerCase())
+    );
+    const matchesCollege = !collegeFilter || team.team_members.some(member => 
+      member.profiles?.college?.toLowerCase().includes(collegeFilter.toLowerCase())
+    );
+    
+    return matchesSearch && matchesEvent && matchesSkill && matchesCollege;
+  });
+
+  const clearFilters = () => {
+    setEventFilter("");
+    setCollegeFilter("");
+    setSkillFilter("");
+    setSearchTerm("");
+  };
+
+  const hasActiveFilters = eventFilter || collegeFilter || skillFilter;
 
   const getOwner = (team: Team) => {
     const owner = team.team_members?.find(member => member.role === 'owner');
@@ -112,15 +159,76 @@ const Teams = () => {
             </Button>
           </div>
           
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search teams by name or skills..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search teams by name or skills..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2"
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+              {hasActiveFilters && <Badge variant="secondary" className="ml-2">Active</Badge>}
+            </Button>
           </div>
+
+          {showFilters && (
+            <Card className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Event</Label>
+                  <Select value={eventFilter} onValueChange={setEventFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All events" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All events</SelectItem>
+                      {events.map((event) => (
+                        <SelectItem key={event.id} value={event.id}>
+                          {event.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Required Skills</Label>
+                  <Input
+                    placeholder="Filter by skills..."
+                    value={skillFilter}
+                    onChange={(e) => setSkillFilter(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">College</Label>
+                  <Input
+                    placeholder="Filter by team member college..."
+                    value={collegeFilter}
+                    onChange={(e) => setCollegeFilter(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              {hasActiveFilters && (
+                <div className="flex justify-end mt-4">
+                  <Button variant="outline" size="sm" onClick={clearFilters}>
+                    <X className="w-4 h-4 mr-2" />
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </Card>
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

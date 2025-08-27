@@ -6,12 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const CreateProfileForm = () => {
   const [name, setName] = useState("");
   const [college, setCollege] = useState("");
+  const [gender, setGender] = useState("");
+  const [yearOfStudy, setYearOfStudy] = useState("");
+  const [branch, setBranch] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [githubUrl, setGithubUrl] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,15 +36,44 @@ const CreateProfileForm = () => {
     setSkills(skills.filter(skill => skill !== skillToRemove));
   };
 
+  const handleWhatsappChange = (value: string) => {
+    const numbersOnly = value.replace(/[^0-9]/g, '');
+    if (numbersOnly.length <= 10) {
+      setWhatsappNumber(numbersOnly);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name) return;
 
+    // Validate WhatsApp number if provided
+    if (whatsappNumber && whatsappNumber.length !== 10) {
+      toast({
+        title: "Error",
+        description: "WhatsApp number must be exactly 10 digits",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
+      const profileData = {
+        name,
+        college,
+        gender: gender || null,
+        year_of_study: yearOfStudy ? parseInt(yearOfStudy) : null,
+        branch: branch || null,
+        whatsapp_number: whatsappNumber || null,
+        linkedin_url: linkedinUrl || null,
+        github_url: githubUrl || null,
+        skills
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .insert([{ name, college, skills }]);
+        .insert([profileData]);
 
       if (error) throw error;
 
@@ -90,6 +126,87 @@ const CreateProfileForm = () => {
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
                   placeholder="Enter your college or university"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="gender">Gender</Label>
+                <Select value={gender} onValueChange={setGender}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="year">Year of Study</Label>
+                <Select value={yearOfStudy} onValueChange={setYearOfStudy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1st Year</SelectItem>
+                    <SelectItem value="2">2nd Year</SelectItem>
+                    <SelectItem value="3">3rd Year</SelectItem>
+                    <SelectItem value="4">4th Year</SelectItem>
+                    <SelectItem value="5">5th Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="branch">Branch/Department</Label>
+                <Input
+                  id="branch"
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  placeholder="e.g., Computer Science Engineering"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="whatsapp">WhatsApp Number</Label>
+                <div className="flex">
+                  <div className="flex items-center bg-muted px-3 rounded-l-md border border-r-0">
+                    <span className="text-sm text-muted-foreground">+91</span>
+                  </div>
+                  <Input
+                    id="whatsapp"
+                    value={whatsappNumber}
+                    onChange={(e) => handleWhatsappChange(e.target.value)}
+                    placeholder="1234567890"
+                    className="rounded-l-none"
+                    maxLength={10}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  10 digits only, no special characters
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="linkedin">LinkedIn Profile URL</Label>
+                <Input
+                  id="linkedin"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/username"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="github">GitHub Profile URL</Label>
+                <Input
+                  id="github"
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  placeholder="https://github.com/username"
                 />
               </div>
               
