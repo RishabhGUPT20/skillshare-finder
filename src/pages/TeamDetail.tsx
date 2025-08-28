@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Users, ArrowLeft, UserPlus, Crown, Calendar, X, Check } from "lucide-react";
+import { Users, ArrowLeft, UserPlus, Crown, Calendar, X, Check, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import TeamChat from "@/components/TeamChat";
 
 interface TeamMember {
   id: string;
@@ -405,137 +407,173 @@ const TeamDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Team Members */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Team Members</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Owner */}
-              {owner && (
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarFallback>
-                        {owner.profiles.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{owner.profiles.name}</span>
-                        <Crown className="w-4 h-4 text-yellow-500" />
-                        <Badge variant="outline">Owner</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{owner.profiles.college}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {owner.profiles.skills?.slice(0, 3).map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {/* Members */}
-              {members.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarFallback>
-                        {member.profiles.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{member.profiles.name}</span>
-                        <Badge variant="outline">{member.role}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{member.profiles.college}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-wrap gap-1">
-                      {member.profiles.skills?.slice(0, 3).map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => removeMember(member.id)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+        {/* Team Tabs - Members, Chat, Requests */}
+        <Tabs defaultValue="members" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="members" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Members
+            </TabsTrigger>
+            <TabsTrigger value="chat" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Team Chat
+            </TabsTrigger>
+            <TabsTrigger value="requests" className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4" />
+              Requests {joinRequests.length > 0 && `(${joinRequests.length})`}
+            </TabsTrigger>
+          </TabsList>
 
-              {team.team_members.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">
-                  No team members yet. Invite developers to join your team!
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Join Requests */}
-        {joinRequests.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Join Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {joinRequests.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {request.profiles.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <span className="font-medium">{request.profiles.name}</span>
-                        <p className="text-sm text-muted-foreground">{request.profiles.college}</p>
+          <TabsContent value="members">
+            <Card>
+              <CardHeader>
+                <CardTitle>Team Members</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Owner */}
+                  {owner && (
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>
+                            {owner.profiles.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{owner.profiles.name}</span>
+                            <Crown className="w-4 h-4 text-yellow-500" />
+                            <Badge variant="outline">Owner</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{owner.profiles.college}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
                       <div className="flex flex-wrap gap-1">
-                        {request.profiles.skills?.slice(0, 3).map((skill, index) => (
+                        {owner.profiles.skills?.slice(0, 3).map((skill, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {skill}
                           </Badge>
                         ))}
                       </div>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleJoinRequest(request.id, 'accept')}
-                      >
-                        <Check className="w-4 h-4 mr-1" />
-                        Accept
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleJoinRequest(request.id, 'reject')}
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        Reject
-                      </Button>
                     </div>
+                  )}
+
+                  {/* Members */}
+                  {members.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>
+                            {member.profiles.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{member.profiles.name}</span>
+                            <Badge variant="outline">{member.role}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{member.profiles.college}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap gap-1">
+                          {member.profiles.skills?.slice(0, 3).map((skill, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => removeMember(member.id)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {team.team_members.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No team members yet. Invite developers to join your team!
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="chat">
+            <TeamChat teamId={team.id} teamName={team.name} />
+          </TabsContent>
+
+          <TabsContent value="requests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Join Requests</CardTitle>
+                <CardDescription>
+                  {joinRequests.length > 0 
+                    ? `${joinRequests.length} pending request(s)`
+                    : "No pending requests"
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {joinRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {joinRequests.map((request) => (
+                      <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarFallback>
+                              {request.profiles.name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <span className="font-medium">{request.profiles.name}</span>
+                            <p className="text-sm text-muted-foreground">{request.profiles.college}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap gap-1">
+                            {request.profiles.skills?.slice(0, 3).map((skill, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleJoinRequest(request.id, 'accept')}
+                          >
+                            <Check className="w-4 h-4 mr-1" />
+                            Accept
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleJoinRequest(request.id, 'reject')}
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <UserPlus className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No pending join requests</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

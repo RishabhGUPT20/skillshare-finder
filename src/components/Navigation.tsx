@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Calendar, Users, User, Home } from "lucide-react";
+import { Calendar, Users, User, Home, LayoutDashboard, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -8,6 +8,8 @@ const Navigation = () => {
 
   const navItems = [
     { to: "/", label: "Home", icon: Home },
+    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/recommendations", label: "Recommendations", icon: Target },
     { to: "/events", label: "Events", icon: Calendar },
     { to: "/teams", label: "Teams", icon: Users },
     { to: "/profiles", label: "Developers", icon: User },

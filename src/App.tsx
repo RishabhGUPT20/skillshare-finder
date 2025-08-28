@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/ThemeProvider";
 import Navigation from "./components/Navigation";
 import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import Recommendations from "./pages/Recommendations";
 import Events from "./pages/Events";
 import Teams from "./pages/Teams";
 import Profiles from "./pages/Profiles";
@@ -29,6 +31,8 @@ const App = () => (
           <Navigation />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/recommendations" element={<Recommendations />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/:id" element={<EventDetail />} />
             <Route path="/events/create" element={<CreateEventForm />} />
